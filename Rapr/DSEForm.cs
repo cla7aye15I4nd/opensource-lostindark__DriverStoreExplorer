@@ -1498,7 +1498,17 @@ namespace Rapr
                         {
                             foreach (DriverStoreEntry entry in driverStoreEntries)
                             {
-                                bool succeeded = this.driverStore.ExportDriver(entry, destinationPath);
+                                bool succeeded;
+                                try
+                                {
+                                    succeeded = this.driverStore.ExportDriver(entry, destinationPath);
+                                }
+                                catch (Exception ex) when (ex is Win32Exception || ex is IOException || ex is UnauthorizedAccessException)
+                                {
+                                    Trace.TraceError($"Failed to export driver package '{entry.DriverPublishedName}': {ex}");
+                                    succeeded = false;
+                                }
+
                                 string resultTxt = string.Format(
                                     succeeded ? Language.Message_Export_Success : Language.Message_Export_Fail,
                                     entry.DriverPublishedName,
